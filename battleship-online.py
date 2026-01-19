@@ -2,11 +2,11 @@ import streamlit as st
 
 st.set_page_config(layout="wide")
 
-# Inisialisasi state untuk menyimpan posisi kapal/klik
+# Inisialisasi state untuk menyimpan koordinat yang diklik
 if 'clicks' not in st.session_state:
     st.session_state.clicks = set()
 
-# CSS kamu tetap sama (Hanya ditambah sedikit untuk button di dalam tabel)
+# CSS ASLI KAMU (Ditambah sedikit agar tombol transparan)
 st.markdown("""
 <style>
     .battleship-table {
@@ -15,66 +15,74 @@ st.markdown("""
         margin-right: auto;
         background-color: #ADD8E6;
     }
-    
     .battleship-table td {
         border: 2px solid black;
         width: 45px;
         height: 45px;
         text-align: center;
         padding: 0px;
-        position: relative; /* Penting untuk posisi tombol */
     }
-
     .label-cell {
         background-color: black !important;
         color: white !important;
         font-weight: bold;
         border: 2px solid #444 !important;
-        width: 45px;
-        height: 45px;
     }
-
-    /* CSS Tambahan agar tombol Streamlit masuk ke dalam kotak tabel tanpa merusak garis */
+    /* Tombol transparan di atas sel tabel */
     .stButton button {
         background-color: transparent !important;
         border: none !important;
-        width: 100% !important;
+        width: 45px !important;
         height: 45px !important;
-        border-radius: 0px !important;
         padding: 0px !important;
+        margin: 0px !important;
         color: black !important;
         font-size: 20px !important;
     }
-    
     .stButton button:hover {
-        background-color: rgba(0,0,0,0.1) !important;
+        background-color: rgba(255, 255, 255, 0.3) !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
-def create_grid_with_buttons(player_name, key_suffix):
-    st.markdown(f"<h3 style='text-align: center;'>{player_name}</h3>", unsafe_allow_html=True)
-    
-    # 1. Header Huruf (Tetap HTML murni)
-    cols_header = st.columns([1] + [1]*10)
-    cols_header[0].markdown("<div class='label-cell' style='display: flex; align-items: center; justify-content: center;'></div>", unsafe_allow_html=True)
+def draw_game_grid(player_prefix):
+    # Membuat header huruf A-J
     letters = "ABCDEFGHIJ"
+    
+    # Kita mulai membangun tabel HTML secara manual agar rapat
+    html_table = f"<table class='battleship-table'>"
+    
+    # 1. Baris Header (Hitam)
+    html_table += "<tr><td class='label-cell'></td>"
+    for char in letters:
+        html_table += f"<td class='label-cell'>{char}</td>"
+    html_table += "</tr>"
+    
+    # Menampilkan baris demi baris
+    st.write(f"### {player_prefix}")
+    
+    # Agar tombol Streamlit bisa masuk ke dalam tabel, kita gunakan st.columns 
+    # di dalam loop, tapi kita bungkus dengan container yang sangat rapat.
+    
+    # HEADER (A-J)
+    header_cols = st.columns([0.5] + [1]*10)
+    header_cols[0].markdown("<div class='label-cell' style='height:45px; line-height:45px; text-align:center;'></div>", unsafe_allow_html=True)
     for i, char in enumerate(letters):
-        cols_header[i+1].markdown(f"<div class='label-cell' style='display: flex; align-items: center; justify-content: center;'>{char}</div>", unsafe_allow_html=True)
+        header_cols[i+1].markdown(f"<div class='label-cell' style='height:45px; line-height:45px; text-align:center;'>{char}</div>", unsafe_allow_html=True)
 
-    # 2. Baris Angka + Tombol
-    for i in range(1, 11):
-        cols = st.columns([1] + [1]*10)
-        # Angka di kiri
-        cols[0].markdown(f"<div class='label-cell' style='display: flex; align-items: center; justify-content: center;'>{i}</div>", unsafe_allow_html=True)
+    # GRID (1-10)
+    for r in range(1, 11):
+        cols = st.columns([0.5] + [1]*10)
+        # Angka di kiri (Hitam)
+        cols[0].markdown(f"<div class='label-cell' style='height:45px; line-height:45px; text-align:center;'>{r}</div>", unsafe_allow_html=True)
         
-        # Grid interaktif
-        for j in range(10):
-            key = f"{key_suffix}_{i}_{j}"
-            # Cek apakah koordinat ini sudah diklik (ada kapal)
+        # Kotak Biru (Tombol)
+        for c in range(10):
+            key = f"{player_prefix}_{r}_{c}"
             label = "●" if key in st.session_state.clicks else ""
             
-            if cols[j+1].button(label, key=key):
+            # Setiap kolom berisi satu tombol yang diformat oleh CSS tadi
+            if cols[c+1].button(label, key=key):
                 if key in st.session_state.clicks:
                     st.session_state.clicks.remove(key)
                 else:
@@ -83,11 +91,10 @@ def create_grid_with_buttons(player_name, key_suffix):
 
 st.title("🚢 Battleship Tactical Board")
 
-# Menampilkan dua grid bersandingan
-col_p1, col_p2 = st.columns(2)
+col1, col2 = st.columns(2)
 
-with col_p1:
-    create_grid_with_buttons("PLAYER 1", "p1")
+with col1:
+    draw_game_grid("PLAYER 1")
 
-with col_p2:
-    create_grid_with_buttons("PLAYER 2 / ENEMY", "p2")
+with col2:
+    draw_game_grid("PLAYER 2")
