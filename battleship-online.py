@@ -1,42 +1,51 @@
 import streamlit as st
 import numpy as np
 
-# Konfigurasi Halaman
-st.set_page_config(page_title="Battleship Online", layout="centered")
-
-# Inisialisasi State (Data yang tetap ada meski halaman direfresh)
-if 'board' not in st.session_state:
-    # 0: Air, 1: Kapal, 2: Meleset (Miss), 3: Kena (Hit)
-    st.session_state.board = np.zeros((10, 10), dtype=int)
-    st.session_state.turn = "Pemain 1"
-
-def handle_click(r, c):
-    # Logika sederhana: klik untuk menembak
-    if st.session_state.board[r, c] == 0:
-        st.session_state.board[r, c] = 2 # Anggap meleset dulu
-    st.toast(f"Menembak koordinat: {chr(65+c)}{r+1}")
-
-def draw_grid():
+# Fungsi untuk membuat grid (seperti kotak sudoku)
+def render_battleship_grid(grid_data, title, interactive=False):
+    st.subheader(title)
+    
     # Header kolom A-J
-    cols = st.columns([0.5] + [1]*10)
+    cols = st.columns([0.7] + [1]*10)
     for i, char in enumerate("ABCDEFGHIJ"):
-        cols[i+1].markdown(f"**{char}**")
+        cols[i+1].write(f"**{char}**")
 
-    # Baris 1-10
     for r in range(10):
-        cols = st.columns([0.5] + [1]*10)
-        cols[0].markdown(f"**{r+1}**")
+        cols = st.columns([0.7] + [1]*10)
+        cols[0].write(f"**{r+1}**") # Nomor baris
         for c in range(10):
-            val = st.session_state.board[r, c]
+            val = grid_data[r, c]
             
-            # Warna dan label tombol berdasarkan status
+            # Logika Warna/Simbol
+            # 0: Kosong, 1: Kapal, 2: Miss (Putih), 3: Hit (Merah)
             label = "🌊"
-            if val == 2: label = "⚪" # Miss
-            if val == 3: label = "💥" # Hit
-            
-            cols[c+1].button(label, key=f"btn-{r}-{c}", on_click=handle_click, args=(r, c))
+            if val == 2: label = "⚪"
+            if val == 3: label = "💥"
+            if val == 1 and not interactive: label = "🚢" # Kapal hanya terlihat di grid sendiri
 
-st.title("🚢 Battleship Online")
-st.write(f"Giliran: **{st.session_state.turn}**")
+            if interactive:
+                # Grid atas (tempat nembak)
+                if cols[c+1].button(label, key=f"target-{r}-{c}"):
+                    st.session_state.last_shot = (r, c)
+                    st.write(f"Menembak ke {chr(65+c)}{r+1}!")
+            else:
+                # Grid bawah (hanya tampilan posisi kita)
+                cols[c+1].markdown(f"<div style='text-align:center'>{label}</div>", unsafe_allow_html=True)
 
-draw_grid()
+# --- TAMPILAN UTAMA ---
+st.title("🚢 Battleship Tactical Console")
+
+# Inisialisasi data contoh jika belum ada
+if 'my_ships' not in st.session_state:
+    st.session_state.my_ships = np.zeros((10,10))
+    st.session_state.enemy_shots = np.zeros((10,10))
+
+# 1. GRID ATAS (Target: Klik untuk nembak lawan)
+with st.container():
+    render_battleship_grid(st.session_state.enemy_shots, "🎯 TARGET GRID (Tembak Lawan di Sini)", interactive=True)
+
+st.divider() # Garis pemisah
+
+# 2. GRID BAWAH (Ocean: Lihat posisi kapal sendiri)
+with st.container():
+    render_battleship_grid(st.session_state.my_ships, "⚓ OCEAN GRID (Kapal Milikmu)")
