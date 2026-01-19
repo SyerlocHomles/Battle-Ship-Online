@@ -2,55 +2,60 @@ import streamlit as st
 
 st.set_page_config(layout="wide")
 
-# CSS untuk memaksa tabel menjadi biru muda dengan garis hitam tebal
+# CSS untuk Header Hitam, Teks Putih, dan Grid Biru
 st.markdown("""
 <style>
     .battleship-table {
-        border-collapse: collapse; /* Ini yang membuat garis menyatu seperti sudoku */
+        border-collapse: collapse;
         margin-left: auto;
         margin-right: auto;
-        background-color: #ADD8E6; /* Biru muda */
+        background-color: #ADD8E6; /* Grid tetap Biru Muda */
     }
+    
+    /* Style untuk kotak grid permainan */
     .battleship-table td {
         border: 2px solid black; /* Garis hitam tebal */
-        width: 40px;
-        height: 40px;
+        width: 45px;
+        height: 45px;
         text-align: center;
         padding: 0px;
     }
+
+    /* Style khusus untuk KOORDINAT (Hitam, Teks Putih) */
+    .label-cell {
+        background-color: black !important;
+        color: white !important;
+        font-weight: bold;
+        border: 2px solid #444 !important; /* Garis abu gelap agar terlihat antar label */
+    }
+
     .grid-container {
         display: flex;
         justify-content: space-around;
         text-align: center;
     }
-    .label-row { font-weight: bold; }
-    .label-col { font-weight: bold; padding-right: 10px; }
 </style>
 """, unsafe_allow_html=True)
 
-def create_grid_html():
-    # Membuat header huruf A-J
-    header = "<tr><td></td>" + "".join([f"<td class='label-row'>{c}</td>" for c in "ABCDEFGHIJ"]) + "</tr>"
+def create_grid_html(player_name):
+    # Membuat header huruf A-J (Hitam, Teks Putih)
+    header = "<tr><td class='label-cell'></td>" + "".join([f"<td class='label-cell'>{c}</td>" for c in "ABCDEFGHIJ"]) + "</tr>"
     
     rows = ""
     for i in range(1, 11):
-        # Membuat baris dengan angka di kiri dan 10 kotak biru
+        # Membuat baris dengan angka di kiri (Hitam, Teks Putih) dan 10 kotak biru
         cells = "".join([f"<td></td>" for _ in range(10)])
-        rows += f"<tr><td class='label-col'>{i}</td>{cells}</tr>"
+        rows += f"<tr><td class='label-cell'>{i}</td>{cells}</tr>"
     
-    return f"<table class='battleship-table'>{header}{rows}</table>"
+    return f"<div><h3>{player_name}</h3><table class='battleship-table'>{header}{rows}</table></div>"
 
-st.title("🚢 Battleship Online")
+st.title("🚢 Battleship Tactical Board")
 
 # Menampilkan dua grid bersandingan
 col1, col2 = st.columns(2)
 
-grid_html = create_grid_html()
-
 with col1:
-    st.markdown(grid_html, unsafe_allow_html=True)
-    st.markdown("<h3 style='text-align: center;'>PLAYER 1</h3>", unsafe_allow_html=True)
+    st.markdown(create_grid_html("PLAYER 1"), unsafe_allow_html=True)
 
 with col2:
-    st.markdown(grid_html, unsafe_allow_html=True)
-    st.markdown("<h3 style='text-align: center;'>PLAYER 2/ENEMY</h3>", unsafe_allow_html=True)
+    st.markdown(create_grid_html("PLAYER 2 / ENEMY"), unsafe_allow_html=True)
