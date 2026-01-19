@@ -1,51 +1,55 @@
 import streamlit as st
 import numpy as np
 
-# Fungsi untuk membuat grid (seperti kotak sudoku)
-def render_battleship_grid(grid_data, title, interactive=False):
-    st.subheader(title)
-    
-    # Header kolom A-J
-    cols = st.columns([0.7] + [1]*10)
+# 1. CSS Custom untuk membuat grid rapat dan kotak (Square)
+st.markdown("""
+    <style>
+    /* Menghilangkan padding antar kolom */
+    [data-testid="column"] {
+        padding: 0px 1px !important;
+        margin: 0px !important;
+    }
+    /* Memaksa tombol menjadi kotak sempurna */
+    .stButton > button {
+        width: 100%;
+        height: 40px;
+        padding: 0px !important;
+        border-radius: 0px;
+        border: 1px solid #d1d1d1;
+        background-color: white;
+        color: black;
+        font-size: 10px;
+    }
+    /* Warna saat kursor di atas kotak (hover) */
+    .stButton > button:hover {
+        background-color: #f0f2f6;
+        border-color: #ff4b4b;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+def draw_sudoku_grid(prefix):
+    # Header Huruf A-J
+    cols = st.columns([0.5] + [1]*10)
     for i, char in enumerate("ABCDEFGHIJ"):
-        cols[i+1].write(f"**{char}**")
+        cols[i+1].markdown(f"<p style='text-align:center; font-weight:bold;'>{char}</p>", unsafe_allow_html=True)
 
+    # Grid 10x10
     for r in range(10):
-        cols = st.columns([0.7] + [1]*10)
-        cols[0].write(f"**{r+1}**") # Nomor baris
+        cols = st.columns([0.5] + [1]*10)
+        cols[0].markdown(f"<p style='line-height:40px; font-weight:bold;'>{r+1}</p>", unsafe_allow_html=True)
         for c in range(10):
-            val = grid_data[r, c]
-            
-            # Logika Warna/Simbol
-            # 0: Kosong, 1: Kapal, 2: Miss (Putih), 3: Hit (Merah)
-            label = "🌊"
-            if val == 2: label = "⚪"
-            if val == 3: label = "💥"
-            if val == 1 and not interactive: label = "🚢" # Kapal hanya terlihat di grid sendiri
-
-            if interactive:
-                # Grid atas (tempat nembak)
-                if cols[c+1].button(label, key=f"target-{r}-{c}"):
-                    st.session_state.last_shot = (r, c)
-                    st.write(f"Menembak ke {chr(65+c)}{r+1}!")
-            else:
-                # Grid bawah (hanya tampilan posisi kita)
-                cols[c+1].markdown(f"<div style='text-align:center'>{label}</div>", unsafe_allow_html=True)
+            # Key harus unik antara grid atas dan bawah, maka pakai prefix
+            if cols[c+1].button(" ", key=f"{prefix}-{r}-{c}"):
+                st.toast(f"Koordinat: {chr(65+c)}{r+1}")
 
 # --- TAMPILAN UTAMA ---
-st.title("🚢 Battleship Tactical Console")
+st.title("⚓ Battleship Online")
 
-# Inisialisasi data contoh jika belum ada
-if 'my_ships' not in st.session_state:
-    st.session_state.my_ships = np.zeros((10,10))
-    st.session_state.enemy_shots = np.zeros((10,10))
+st.write("### 🎯 Target Grid")
+draw_sudoku_grid("top")
 
-# 1. GRID ATAS (Target: Klik untuk nembak lawan)
-with st.container():
-    render_battleship_grid(st.session_state.enemy_shots, "🎯 TARGET GRID (Tembak Lawan di Sini)", interactive=True)
+st.markdown("<br>", unsafe_allow_html=True) # Jarak antar grid
 
-st.divider() # Garis pemisah
-
-# 2. GRID BAWAH (Ocean: Lihat posisi kapal sendiri)
-with st.container():
-    render_battleship_grid(st.session_state.my_ships, "⚓ OCEAN GRID (Kapal Milikmu)")
+st.write("### 🚢 Your Fleet")
+draw_sudoku_grid("bottom")
