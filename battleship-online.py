@@ -1,66 +1,56 @@
 import streamlit as st
 
-# Mengatur agar halaman melebar agar cukup untuk 2 grid bersandingan
 st.set_page_config(layout="wide")
 
-# CSS untuk meniru persis gaya di gambar (Warna biru muda, garis hitam tebal)
+# CSS untuk memaksa tabel menjadi biru muda dengan garis hitam tebal
 st.markdown("""
-    <style>
-    /* Menghilangkan padding antar kolom Streamlit */
-    [data-testid="column"] {
-        padding: 0px !important;
-        margin: 0px !important;
+<style>
+    .battleship-table {
+        border-collapse: collapse; /* Ini yang membuat garis menyatu seperti sudoku */
+        margin-left: auto;
+        margin-right: auto;
+        background-color: #ADD8E6; /* Biru muda */
     }
-    
-    /* Style tombol agar berbentuk kotak, biru muda, dan garis hitam tebal */
-    .stButton > button {
-        width: 100%;
+    .battleship-table td {
+        border: 2px solid black; /* Garis hitam tebal */
+        width: 40px;
         height: 40px;
-        border-radius: 0px;
-        border: 2px solid black !important; /* Garis hitam tebal */
-        background-color: #ADD8E6 !important; /* Biru muda sesuai gambar */
-        color: black;
-        font-weight: bold;
-    }
-
-    /* Efek saat tombol ditekan */
-    .stButton > button:active, .stButton > button:focus {
-        background-color: #87CEEB !important;
-        border: 2px solid black !important;
-    }
-
-    /* Label header (A-J dan 1-10) */
-    .grid-label {
         text-align: center;
-        font-weight: bold;
-        font-family: sans-serif;
+        padding: 0px;
     }
-    </style>
-    """, unsafe_allow_html=True)
+    .grid-container {
+        display: flex;
+        justify-content: space-around;
+        text-align: center;
+    }
+    .label-row { font-weight: bold; }
+    .label-col { font-weight: bold; padding-right: 10px; }
+</style>
+""", unsafe_allow_html=True)
 
-def draw_battleship_grid(key_prefix):
-    # Membuat Header Huruf A-J
-    header_cols = st.columns([0.5] + [1]*10)
-    letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
-    for i, l in enumerate(letters):
-        header_cols[i+1].markdown(f'<p class="grid-label">{l}</p>', unsafe_allow_html=True)
+def create_grid_html():
+    # Membuat header huruf A-J
+    header = "<tr><td></td>" + "".join([f"<td class='label-row'>{c}</td>" for c in "ABCDEFGHIJ"]) + "</tr>"
+    
+    rows = ""
+    for i in range(1, 11):
+        # Membuat baris dengan angka di kiri dan 10 kotak biru
+        cells = "".join([f"<td></td>" for _ in range(10)])
+        rows += f"<tr><td class='label-col'>{i}</td>{cells}</tr>"
+    
+    return f"<table class='battleship-table'>{header}{rows}</table>"
 
-    # Membuat 10 Baris
-    for r in range(10):
-        cols = st.columns([0.5] + [1]*10)
-        # Label Angka di samping kiri
-        cols[0].markdown(f'<p class="grid-label" style="line-height:40px;">{r+1}</p>', unsafe_allow_html=True)
-        for c in range(10):
-            if cols[c+1].button("", key=f"{key_prefix}-{r}-{c}"):
-                st.toast(f"{key_prefix.upper()}: {letters[c]}{r+1}")
+st.title("🚢 Battleship Online")
 
-# --- TAMPILAN UTAMA (2 Kolom Besar) ---
-main_col1, main_col2 = st.columns(2)
+# Menampilkan dua grid bersandingan
+col1, col2 = st.columns(2)
 
-with main_col1:
-    draw_battleship_grid("player1")
-    st.markdown("<h2 style='text-align: center;'>PLAYER 1</h2>", unsafe_allow_html=True)
+grid_html = create_grid_html()
 
-with main_col2:
-    draw_battleship_grid("player2")
-    st.markdown("<h2 style='text-align: center;'>PLAYER 2/ENEMY</h2>", unsafe_allow_html=True)
+with col1:
+    st.markdown(grid_html, unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center;'>PLAYER 1</h3>", unsafe_allow_html=True)
+
+with col2:
+    st.markdown(grid_html, unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center;'>PLAYER 2/ENEMY</h3>", unsafe_allow_html=True)
