@@ -1,61 +1,84 @@
 import streamlit as st
+import numpy as np
 
 st.set_page_config(layout="wide")
 
-# CSS untuk Header Hitam, Teks Putih, dan Grid Biru
+# CSS untuk Grid Sudoku Rapat dengan Header Hitam
 st.markdown("""
 <style>
-    .battleship-table {
-        border-collapse: collapse;
-        margin-left: auto;
-        margin-right: auto;
-        background-color: #ADD8E6; /* Grid tetap Biru Muda */
+    /* Menghilangkan gap antar kolom */
+    [data-testid="column"] {
+        padding: 0px !important;
+        margin: 0px !important;
+        gap: 0px !important;
     }
     
-    /* Style untuk kotak grid permainan */
-    .battleship-table td {
-        border: 2px solid black; /* Garis hitam tebal */
-        width: 45px;
-        height: 45px;
-        text-align: center;
-        padding: 0px;
+    /* Tombol Grid Biru Muda dengan Garis Hitam Tebal */
+    .stButton > button {
+        width: 100% !important;
+        height: 45px !important;
+        border-radius: 0px !important;
+        border: 2px solid black !important;
+        background-color: #ADD8E6 !important; /* Biru Muda */
+        color: black !important;
+        font-size: 20px !important;
+        padding: 0px !important;
     }
 
-    /* Style khusus untuk KOORDINAT (Hitam, Teks Putih) */
-    .label-cell {
-        background-color: black !important;
-        color: white !important;
+    /* Label Koordinat Hitam Teks Putih */
+    .coord-label {
+        background-color: black;
+        color: white;
+        text-align: center;
+        line-height: 45px;
         font-weight: bold;
-        border: 2px solid #444 !important; /* Garis abu gelap agar terlihat antar label */
-    }
-
-    .grid-container {
-        display: flex;
-        justify-content: space-around;
-        text-align: center;
+        border: 1px solid #444;
+        height: 45px;
     }
 </style>
 """, unsafe_allow_html=True)
 
-def create_grid_html(player_name):
-    # Membuat header huruf A-J (Hitam, Teks Putih)
-    header = "<tr><td class='label-cell'></td>" + "".join([f"<td class='label-cell'>{c}</td>" for c in "ABCDEFGHIJ"]) + "</tr>"
-    
-    rows = ""
-    for i in range(1, 11):
-        # Membuat baris dengan angka di kiri (Hitam, Teks Putih) dan 10 kotak biru
-        cells = "".join([f"<td></td>" for _ in range(10)])
-        rows += f"<tr><td class='label-cell'>{i}</td>{cells}</tr>"
-    
-    return f"<div><h3>{player_name}</h3><table class='battleship-table'>{header}{rows}</table></div>"
+# Inisialisasi State Papan (10x10) jika belum ada
+if 'my_board' not in st.session_state:
+    st.session_state.my_board = np.zeros((10, 10), dtype=int)
 
-st.title("🚢 Battleship Tactical Board")
+def place_ship(r, c):
+    # Toggle: klik untuk pasang (1), klik lagi untuk hapus (0)
+    if st.session_state.my_board[r, c] == 0:
+        st.session_state.my_board[r, c] = 1
+    else:
+        st.session_state.my_board[r, c] = 0
 
-# Menampilkan dua grid bersandingan
+def draw_clickable_grid(board_data, key_prefix):
+    # Header A-J
+    cols = st.columns([0.5] + [1]*10)
+    cols[0].markdown('<div class="coord-label"></div>', unsafe_allow_html=True)
+    for i, char in enumerate("ABCDEFGHIJ"):
+        cols[i+1].markdown(f'<div class="coord-label">{char}</div>', unsafe_allow_html=True)
+
+    # Baris 1-10
+    for r in range(10):
+        cols = st.columns([0.5] + [1]*10)
+        cols[0].markdown(f'<div class="coord-label">{r+1}</div>', unsafe_allow_html=True)
+        for c in range(10):
+            # Cek apakah ada kapal di koordinat ini
+            is_ship = board_data[r, c] == 1
+            label = "●" if is_ship else "" # Titik hitam jika ada kapal
+            
+            # Gambar tombol
+            cols[c+1].button(label, key=f"{key_prefix}-{r}-{c}", on_click=place_ship, args=(r, c))
+
+# --- TAMPILAN UTAMA ---
+st.title("🚢 Battleship Tactical Setup")
+st.write("Klik pada kotak biru untuk menyusun siluet kapalmu (titik hitam).")
+
 col1, col2 = st.columns(2)
 
 with col1:
-    st.markdown(create_grid_html("PLAYER 1"), unsafe_allow_html=True)
+    st.subheader("PLAYER 1 (Your Board)")
+    draw_clickable_grid(st.session_state.my_board, "p1")
 
 with col2:
-    st.markdown(create_grid_html("PLAYER 2 / ENEMY"), unsafe_allow_html=True)
+    st.subheader("ENEMY PREVIEW")
+    # Grid musuh sementara statis
+    draw_clickable_grid(np.zeros((10,10)), "p2")
