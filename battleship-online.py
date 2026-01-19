@@ -1,55 +1,66 @@
 import streamlit as st
 
-# 1. CSS Kustom dengan logika Garis Tebal (nth-child)
+# Mengatur agar halaman melebar agar cukup untuk 2 grid bersandingan
+st.set_page_config(layout="wide")
+
+# CSS untuk meniru persis gaya di gambar (Warna biru muda, garis hitam tebal)
 st.markdown("""
     <style>
+    /* Menghilangkan padding antar kolom Streamlit */
     [data-testid="column"] {
         padding: 0px !important;
         margin: 0px !important;
     }
     
+    /* Style tombol agar berbentuk kotak, biru muda, dan garis hitam tebal */
     .stButton > button {
         width: 100%;
-        height: 45px;
+        height: 40px;
         border-radius: 0px;
-        border: 0.5px solid #bdc3c7;
-        background-color: white;
+        border: 2px solid black !important; /* Garis hitam tebal */
+        background-color: #ADD8E6 !important; /* Biru muda sesuai gambar */
+        color: black;
+        font-weight: bold;
     }
 
-    /* Garis tebal vertikal setelah kolom ke-5 */
-    [data-testid="column"]:nth-child(5) {
-        border-right: 3px solid black !important;
+    /* Efek saat tombol ditekan */
+    .stButton > button:active, .stButton > button:focus {
+        background-color: #87CEEB !important;
+        border: 2px solid black !important;
     }
 
-    /* Garis tebal horizontal setelah baris ke-5 */
-    .thick-row {
-        border-bottom: 3px solid black !important;
-    }
-    
-    .stButton > button:hover {
-        background-color: #f1f2f6;
-        border-color: #3498db;
+    /* Label header (A-J dan 1-10) */
+    .grid-label {
+        text-align: center;
+        font-weight: bold;
+        font-family: sans-serif;
     }
     </style>
     """, unsafe_allow_html=True)
 
-def draw_sudoku_style_grid(key_prefix):
+def draw_battleship_grid(key_prefix):
+    # Membuat Header Huruf A-J
+    header_cols = st.columns([0.5] + [1]*10)
+    letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
+    for i, l in enumerate(letters):
+        header_cols[i+1].markdown(f'<p class="grid-label">{l}</p>', unsafe_allow_html=True)
+
+    # Membuat 10 Baris
     for r in range(10):
-        # Tambahkan div khusus untuk memberi garis bawah tebal pada baris ke-5
-        is_thick = "thick-row" if r == 4 else ""
-        
-        st.markdown(f'<div class="{is_thick}">', unsafe_allow_html=True)
-        cols = st.columns(10)
+        cols = st.columns([0.5] + [1]*10)
+        # Label Angka di samping kiri
+        cols[0].markdown(f'<p class="grid-label" style="line-height:40px;">{r+1}</p>', unsafe_allow_html=True)
         for c in range(10):
-            if cols[c].button("", key=f"{key_prefix}-{r}-{c}"):
-                st.toast(f"Baris {r+1}, Kolom {c+1}")
-        st.markdown('</div>', unsafe_allow_html=True)
+            if cols[c+1].button("", key=f"{key_prefix}-{r}-{c}"):
+                st.toast(f"{key_prefix.upper()}: {letters[c]}{r+1}")
 
-# --- TAMPILAN UTAMA ---
-st.title("⚓ Battleship Sudoku Grid")
+# --- TAMPILAN UTAMA (2 Kolom Besar) ---
+main_col1, main_col2 = st.columns(2)
 
-st.write("### 🎯 Target Grid")
-draw_sudoku_style_grid("target")
+with main_col1:
+    draw_battleship_grid("player1")
+    st.markdown("<h2 style='text-align: center;'>PLAYER 1</h2>", unsafe_allow_html=True)
 
-st.write("### 🚢 Your Fleet")
-draw_sudoku_style_grid("home")
+with main_col2:
+    draw_battleship_grid("player2")
+    st.markdown("<h2 style='text-align: center;'>PLAYER 2/ENEMY</h2>", unsafe_allow_html=True)
