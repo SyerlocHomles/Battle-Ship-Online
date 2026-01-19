@@ -1,55 +1,53 @@
 import streamlit as st
-import numpy as np
 
-# 1. CSS Custom untuk membuat grid rapat dan kotak (Square)
+# 1. CSS Kustom untuk membuat Grid Polos ala Sudoku
 st.markdown("""
     <style>
-    /* Menghilangkan padding antar kolom */
+    /* Menghilangkan padding utama agar grid rapat */
     [data-testid="column"] {
-        padding: 0px 1px !important;
+        padding: 0px !important;
         margin: 0px !important;
     }
-    /* Memaksa tombol menjadi kotak sempurna */
+    
+    /* Desain tombol menjadi kotak polos */
     .stButton > button {
         width: 100%;
-        height: 40px;
-        padding: 0px !important;
+        height: 45px; /* Sesuaikan tinggi kotak */
         border-radius: 0px;
-        border: 1px solid #d1d1d1;
+        border: 0.5px solid #bdc3c7; /* Garis tipis antar kotak */
         background-color: white;
-        color: black;
-        font-size: 10px;
+        transition: 0.2s;
     }
-    /* Warna saat kursor di atas kotak (hover) */
+
+    /* Efek hover (saat kursor di atas kotak) */
     .stButton > button:hover {
-        background-color: #f0f2f6;
-        border-color: #ff4b4b;
+        background-color: #f1f2f6;
+        border-color: #3498db;
     }
+
+    /* Logika Garis Tebal ala Sudoku (opsional, tiap 5 kotak untuk grid 10x10) */
+    /* Jika ingin kotak benar-benar polos tanpa garis tebal, bagian ini bisa dihapus */
     </style>
     """, unsafe_allow_html=True)
 
-def draw_sudoku_grid(prefix):
-    # Header Huruf A-J
-    cols = st.columns([0.5] + [1]*10)
-    for i, char in enumerate("ABCDEFGHIJ"):
-        cols[i+1].markdown(f"<p style='text-align:center; font-weight:bold;'>{char}</p>", unsafe_allow_html=True)
-
-    # Grid 10x10
+def draw_clean_grid(key_prefix):
+    # Membuat 10 baris
     for r in range(10):
-        cols = st.columns([0.5] + [1]*10)
-        cols[0].markdown(f"<p style='line-height:40px; font-weight:bold;'>{r+1}</p>", unsafe_allow_html=True)
+        # Membuat 10 kolom
+        cols = st.columns(10)
         for c in range(10):
-            # Key harus unik antara grid atas dan bawah, maka pakai prefix
-            if cols[c+1].button(" ", key=f"{prefix}-{r}-{c}"):
-                st.toast(f"Koordinat: {chr(65+c)}{r+1}")
+            # Tombol kosong tanpa teks
+            if cols[c].button("", key=f"{key_prefix}-{r}-{c}"):
+                # Ini tempat kita menaruh logika klik nanti
+                st.toast(f"Klik koordinat: Baris {r+1}, Kolom {c+1}")
 
 # --- TAMPILAN UTAMA ---
-st.title("⚓ Battleship Online")
+st.title("🚢 Battleship Sudoku Style")
 
 st.write("### 🎯 Target Grid")
-draw_sudoku_grid("top")
+draw_clean_grid("target")
 
-st.markdown("<br>", unsafe_allow_html=True) # Jarak antar grid
+st.markdown("<br><br>", unsafe_allow_html=True)
 
-st.write("### 🚢 Your Fleet")
-draw_sudoku_grid("bottom")
+st.write("### ⚓ Your Fleet")
+draw_clean_grid("home")
